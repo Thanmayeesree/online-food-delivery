@@ -1,0 +1,410 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>FoodExpress</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial;background:#fff7f0;color:#333}
+header{background:#e63946;color:white;padding:18px;display:flex;justify-content:space-between;flex-wrap:wrap}
+nav a{color:white;margin:8px;text-decoration:none;cursor:pointer}
+h1,h2{text-align:center}
+.hero{text-align:center;padding:60px;background:#ffe0d6}
+button,.btn{background:#e63946;color:white;padding:10px 18px;border:0;border-radius:5px;cursor:pointer;margin:5px}
+.container{display:flex;justify-content:center;flex-wrap:wrap;gap:20px;padding:20px}
+.card{background:white;padding:15px;width:230px;text-align:center;border-radius:10px;box-shadow:0 2px 8px #aaa}
+.card img{width:100%;height:140px;object-fit:cover;border-radius:8px}
+.form{background:white;padding:25px;margin:30px auto;width:350px;max-width:90%;border-radius:10px}
+input,select,textarea{width:100%;padding:10px;margin:8px 0;border:1px solid #ccc;border-radius:5px}
+section{padding:20px}
+.hidden{display:none}
+.success{color:green;font-weight:bold}
+</style>
+</head>
+<body>
+
+<header>
+<h2>FoodExpress</h2>
+<nav>
+<a onclick="show('home')">Home</a>
+<a onclick="show('register')">Register</a>
+<a onclick="show('login')">Login</a>
+<a onclick="show('restaurants')">Restaurants</a>
+<a onclick="show('menu')">Menu</a>
+<a onclick="show('cart')">Cart</a>
+<a onclick="show('orders')">Orders</a>
+<a onclick="show('admin')">Admin</a>
+</nav>
+</header>
+
+<section id="home">
+<div class="hero">
+<h1>Welcome to FoodExpress!</h1>
+<h2>Delicious Food Delivered Fast</h2>
+<p>Order your favourite food online.</p>
+<button onclick="show('restaurants')">Order Now</button>
+</div>
+<h2>Popular Foods</h2>
+<div class="container" id="popular"></div>
+</section>
+
+<section id="register" class="hidden">
+<div class="form">
+<h2>Registration</h2>
+<input id="name" placeholder="Full Name">
+<input id="regemail" type="email" placeholder="Email">
+<input id="regpass" type="password" placeholder="Password">
+<select id="role">
+<option value="user">User</option>
+<option value="admin">Admin</option>
+</select>
+<button onclick="register()">Register</button>
+</div>
+</section>
+
+<section id="login" class="hidden">
+<div class="form">
+<h2>Login</h2>
+<input id="email" type="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+</div>
+</section>
+
+<section id="dashboard" class="hidden">
+<h1>User Dashboard</h1>
+<h2 id="welcome"></h2>
+<button onclick="show('restaurants')">Browse Food</button>
+<button onclick="show('orders')">My Orders</button>
+<button onclick="show('cart')">My Cart</button>
+<button onclick="logout()">Logout</button>
+</section>
+
+<section id="restaurants" class="hidden">
+<h1>Our Restaurants</h1>
+<div class="container">
+<div class="card">
+<h2>Spice Hub</h2>
+<p>Indian Food</p>
+<button onclick="show('menu')">View Menu</button>
+</div>
+<div class="card">
+<h2>Pizza Point</h2>
+<p>Italian Food</p>
+<button onclick="show('menu')">View Menu</button>
+</div>
+<div class="card">
+<h2>Burger House</h2>
+<p>Fast Food</p>
+<button onclick="show('menu')">View Menu</button>
+</div>
+</div>
+</section>
+
+<section id="menu" class="hidden">
+<h1>Food Menu</h1>
+<div class="container" id="food"></div>
+</section>
+
+<section id="cart" class="hidden">
+<h1>Shopping Cart</h1>
+<div class="form">
+<div id="cartitems"></div>
+<input id="coupon" placeholder="Enter Coupon Code">
+<button onclick="applyCoupon()">Apply Discount</button>
+<p id="couponMessage"></p>
+<h3 id="subtotal"></h3>
+<h3 id="discount"></h3>
+<h2 id="total"></h2>
+<button onclick="show('checkout')">Checkout</button>
+</div>
+</section>
+
+<section id="checkout" class="hidden">
+<div class="form">
+<h2>Checkout</h2>
+<input id="customer" placeholder="Customer Name">
+<input id="phone" placeholder="Phone Number">
+<textarea id="address" placeholder="Delivery Address"></textarea>
+<select id="payment">
+<option>Cash on Delivery</option>
+<option>UPI (Demo)</option>
+<option>Card (Demo)</option>
+</select>
+<h3 id="bill"></h3>
+<button onclick="placeOrder()">Place Order</button>
+</div>
+</section>
+
+<section id="orders" class="hidden">
+<h1>My Orders</h1>
+<div class="container" id="orderlist"></div>
+</section>
+
+<section id="admin" class="hidden">
+<h1>Admin Dashboard</h1>
+<h2 id="count"></h2>
+<h2 id="revenue"></h2>
+<div class="container" id="adminorders"></div>
+</section>
+
+<script>
+let foods=[
+{id:1,name:"Chicken Biryani",price:220,img:"https://images.unsplash.com/photo-1563379091339-03246963d96c?w=400"},
+{id:2,name:"Veg Biryani",price:160,img:"https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=400"},
+{id:3,name:"Pizza",price:250,img:"https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400"},
+{id:4,name:"Burger",price:140,img:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400"},
+{id:5,name:"Masala Dosa",price:90,img:"https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=400"}
+];
+
+let users=JSON.parse(localStorage.getItem("users"))||[];
+let cart=JSON.parse(localStorage.getItem("cart"))||[];
+let orders=JSON.parse(localStorage.getItem("orders"))||[];
+let current=JSON.parse(localStorage.getItem("current"))||null;
+let discount=0;
+
+function save(){
+localStorage.setItem("cart",JSON.stringify(cart));
+localStorage.setItem("orders",JSON.stringify(orders));
+}
+
+function show(id){
+document.querySelectorAll("section").forEach(s=>s.classList.add("hidden"));
+document.getElementById(id).classList.remove("hidden");
+
+if(id==="cart")displayCart();
+if(id==="checkout")displayBill();
+if(id==="orders")displayOrders();
+if(id==="admin")displayAdmin();
+}
+
+function register(){
+let u={
+name:document.getElementById("name").value,
+email:document.getElementById("regemail").value,
+password:document.getElementById("regpass").value,
+role:document.getElementById("role").value
+};
+
+if(!u.name||!u.email||!u.password)
+return alert("Fill all fields");
+
+if(users.some(x=>x.email===u.email))
+return alert("Email already exists");
+
+users.push(u);
+localStorage.setItem("users",JSON.stringify(users));
+alert("Registration Successful");
+show("login");
+}
+
+function login(){
+let u=users.find(x=>
+x.email===document.getElementById("email").value&&
+x.password===document.getElementById("password").value
+);
+
+if(!u)return alert("Invalid login details");
+
+current=u;
+localStorage.setItem("current",JSON.stringify(u));
+
+if(u.role==="admin")show("admin");
+else{
+show("dashboard");
+document.getElementById("welcome").innerText="Welcome "+u.name;
+}
+}
+
+function logout(){
+current=null;
+localStorage.removeItem("current");
+show("home");
+}
+
+function displayFoods(){
+document.getElementById("food").innerHTML=foods.map(f=>`
+<div class="card">
+<img src="${f.img}" alt="${f.name}">
+<h3>${f.name}</h3>
+<p>₹${f.price}</p>
+<button onclick="add(${f.id})">Add to Cart</button>
+</div>`).join("");
+}
+
+function add(id){
+let f=foods.find(x=>x.id===id);
+let item=cart.find(x=>x.id===id);
+
+if(item)item.qty++;
+else cart.push({...f,qty:1});
+
+save();
+alert("Added to Cart");
+}
+
+function displayCart(){
+let box=document.getElementById("cartitems");
+
+box.innerHTML=cart.length?cart.map(f=>`
+<p>${f.name} - ₹${f.price} × ${f.qty}
+<button onclick="change(${f.id},1)">+</button>
+<button onclick="change(${f.id},-1)">-</button>
+</p>`).join(""):"Cart is Empty";
+
+let sum=cart.reduce((s,f)=>s+f.price*f.qty,0);
+
+document.getElementById("subtotal").innerText="Subtotal: ₹"+sum;
+document.getElementById("discount").innerText="Discount: -₹"+discount.toFixed(2);
+document.getElementById("total").innerText="Final Amount: ₹"+(sum-discount).toFixed(2);
+}
+
+function change(id,n){
+let f=cart.find(x=>x.id===id);
+
+if(f)f.qty+=n;
+
+cart=cart.filter(x=>x.qty>0);
+
+discount=0;
+document.getElementById("couponMessage").innerText="Cart changed. Apply coupon again.";
+save();
+displayCart();
+}
+
+function applyCoupon(){
+let sum=cart.reduce((s,f)=>s+f.price*f.qty,0);
+let code=document.getElementById("coupon").value.trim().toUpperCase();
+
+if(code==="FOOD10"&&sum>0){
+discount=Math.min(sum*0.10,100);
+document.getElementById("couponMessage").innerText="10% Discount Applied Successfully!";
+document.getElementById("couponMessage").className="success";
+}else{
+discount=0;
+document.getElementById("couponMessage").innerText="Invalid Coupon Code!";
+document.getElementById("couponMessage").className="";
+}
+
+displayCart();
+}
+
+function displayBill(){
+let sum=cart.reduce((s,f)=>s+f.price*f.qty,0);
+
+document.getElementById("bill").innerHTML=
+"Subtotal: ₹"+sum+
+"<br>Discount: -₹"+discount.toFixed(2)+
+"<br>Final Amount: ₹"+(sum-discount).toFixed(2);
+}
+
+function placeOrder(){
+if(!current){
+alert("Please Login First");
+show("login");
+return;
+}
+
+if(cart.length===0)return alert("Cart is Empty");
+
+let customer=document.getElementById("customer").value;
+let phone=document.getElementById("phone").value;
+let address=document.getElementById("address").value;
+
+if(!customer||!phone||!address)
+return alert("Fill Delivery Details");
+
+if(!/^[0-9]{10}$/.test(phone))
+return alert("Enter a valid 10-digit phone number");
+
+let sum=cart.reduce((s,f)=>s+f.price*f.qty,0)-discount;
+
+orders.push({
+id:Date.now(),
+email:current.email,
+name:customer,
+phone:phone,
+address:address,
+payment:document.getElementById("payment").value,
+items:cart,
+subtotal:cart.reduce((s,f)=>s+f.price*f.qty,0),
+discount:discount,
+total:sum,
+status:"Order Placed"
+});
+
+cart=[];
+discount=0;
+document.getElementById("coupon").value="";
+document.getElementById("couponMessage").innerText="";
+save();
+
+alert("Order Placed Successfully!");
+show("orders");
+}
+
+function displayOrders(){
+if(!current){
+alert("Please Login First");
+return show("login");
+}
+
+let list=orders.filter(o=>o.email===current.email);
+
+document.getElementById("orderlist").innerHTML=list.length?
+list.map(o=>`
+<div class="card">
+<h3>Order #${o.id}</h3>
+<p>${o.name}</p>
+<p>Subtotal: ₹${o.subtotal}</p>
+<p>Discount: -₹${o.discount}</p>
+<p>Final Amount: ₹${o.total}</p>
+<p>Status: ${o.status}</p>
+</div>`).join(""):"No Orders Yet";
+}
+
+function displayAdmin(){
+if(!current||current.role!=="admin"){
+alert("Admin Login Required");
+return show("login");
+}
+
+document.getElementById("count").innerText="Total Orders: "+orders.length;
+
+document.getElementById("revenue").innerText=
+"Revenue: ₹"+orders.reduce((s,o)=>s+o.total,0);
+
+document.getElementById("adminorders").innerHTML=orders.map(o=>`
+<div class="card">
+<h3>Order #${o.id}</h3>
+<p>${o.name}</p>
+<p>₹${o.total}</p>
+<p>Status: ${o.status}</p>
+<select onchange="updateStatus(${o.id},this.value)">
+<option ${o.status==="Order Placed"?"selected":""}>Order Placed</option>
+<option ${o.status==="Preparing"?"selected":""}>Preparing</option>
+<option ${o.status==="Out for Delivery"?"selected":""}>Out for Delivery</option>
+<option ${o.status==="Delivered"?"selected":""}>Delivered</option>
+</select>
+</div>`).join("");
+}
+
+function updateStatus(id,status){
+orders=orders.map(o=>o.id===id?{...o,status}:o);
+save();
+alert("Status Updated");
+displayAdmin();
+}
+
+document.getElementById("popular").innerHTML=foods.slice(0,3).map(f=>`
+<div class="card">
+<img src="${f.img}" alt="${f.name}">
+<h3>${f.name}</h3>
+<p>₹${f.price}</p>
+<button onclick="add(${f.id})">Add to Cart</button>
+</div>`).join("");
+
+displayFoods();
+</script>
+</body>
+</html>
